@@ -1,0 +1,1 @@
+public class BarBar { public void barBar() { string BARBAR = "BarBar"; } }
