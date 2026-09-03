@@ -1,0 +1,35 @@
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+
+# C#
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Go
+/golang/hyper_copy
+/golang/hyper_copy.exe
+*.test
+*.out
+
+# Rust
+/rust/target/
+**/*.rs.bk
+Cargo.lock
+
+# Ruby
+*.gem
+/.bundle/
+/vendor/bundle/
+/lib/bundler/man/
+.rbc
+.yardoc
+/_yardoc/
+/doc/
+/rdoc/
