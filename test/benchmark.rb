@@ -7,7 +7,9 @@ puts " Building Binaries..."
 puts "============================================="
 
 # Create benchmark_bin directory
-bin_dir = File.expand_path('benchmark_bin', __dir__)
+PROJECT_ROOT = File.expand_path('..', __dir__)
+Dir.chdir(PROJECT_ROOT)
+bin_dir = File.expand_path('benchmark_bin', PROJECT_ROOT)
 FileUtils.rm_rf(bin_dir)
 FileUtils.mkdir_p(bin_dir)
 
@@ -18,12 +20,12 @@ system("cd golang && go build -o ../benchmark_bin/hyper_copy_go.exe main.go")
 # Build Rust
 puts "[Rust] Building..."
 system("cd rust && cargo build --release")
-rust_exe = File.expand_path('rust/target/release/rust.exe', __dir__)
+rust_exe = File.expand_path('rust/target/release/rust.exe', PROJECT_ROOT)
 if File.exist?(rust_exe)
   FileUtils.cp(rust_exe, File.join(bin_dir, "hyper_copy_rust.exe"))
 else
   # Cargo might name it hyper_copy.exe if we changed it, check just in case
-  alt_rust_exe = File.expand_path('rust/target/release/hyper_copy.exe', __dir__)
+  alt_rust_exe = File.expand_path('rust/target/release/hyper_copy.exe', PROJECT_ROOT)
   FileUtils.cp(alt_rust_exe, File.join(bin_dir, "hyper_copy_rust.exe")) if File.exist?(alt_rust_exe)
 end
 
@@ -39,7 +41,7 @@ puts "\n============================================="
 puts " Generating Test Data..."
 puts "============================================="
 
-data_dir = File.expand_path('benchmark_data', __dir__)
+data_dir = File.expand_path('benchmark_data', PROJECT_ROOT)
 src_dir = File.join(data_dir, 'src')
 dst_dir = File.join(data_dir, 'dst')
 
@@ -70,8 +72,8 @@ puts "============================================="
 
 targets = {
   "Ruby" => {
-    cmd: "ruby #{File.expand_path('ruby/hyper_copy.rb', __dir__)}",
-    bin_path: File.expand_path('ruby/hyper_copy.rb', __dir__) # N/A for size, we'll handle this
+    cmd: "ruby #{File.expand_path('ruby/hyper_copy.rb', PROJECT_ROOT)}",
+    bin_path: File.expand_path('ruby/hyper_copy.rb', PROJECT_ROOT) # N/A for size, we'll handle this
   },
   "Go" => {
     cmd: File.join(bin_dir, "hyper_copy_go.exe"),

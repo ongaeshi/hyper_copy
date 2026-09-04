@@ -86,7 +86,7 @@ When the replacement target (the string specified with `--to`) is `AaaBbb`, the 
 
 ## Benchmark
 
-Performance comparison of different language implementations (copying and replacing text in 10 large files). You can run `ruby benchmark.rb` to reproduce this test.
+Performance comparison of different language implementations (copying and replacing text in 10 large files). You can run `ruby test/benchmark.rb` to reproduce this test.
 
 | Language | Execution Time (s) | Binary Size |
 | --- | --- | --- |

@@ -81,3 +81,15 @@ Bar.cs -> Bar.cs (overwrite)
 | `foobar` | `aaabbb` | すべて小文字 |
 
 ※ 日本語（例: `フー` -> `バー`）などの文字の大小が存在しない文字については、そのまま置換されます。
+
+## ベンチマーク
+
+異なる言語による実装のパフォーマンス比較です（10個の巨大なファイルに対してコピーと文字列置換を実行）。`ruby test/benchmark.rb` を実行することで、このテストを手元で再現できます。
+
+| Language | Execution Time (s) | Binary Size |
+| --- | --- | --- |
+| Rust | 1.669 s | 1.80 MB |
+| Go | 2.321 s | 3.00 MB |
+| C# (Standard) | 2.590 s | 144.00 KB |
+| Ruby | 3.353 s | N/A (Script) |
+| C# (Self-Contained) | 4.679 s | 67.65 MB |
