@@ -1,0 +1,109 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'golang/go.mod'
+          cache: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build Go
+        working-directory: ./golang
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            go build -o hypercopy_go_windows.exe main.go
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            go build -o hypercopy_go_macos main.go
+          else
+            go build -o hypercopy_go_linux main.go
+          fi
+
+      - name: Build Rust
+        working-directory: ./rust
+        run: cargo build --release
+
+      - name: Build C#
+        working-directory: ./csharp/HyperCopy
+        # The user requested NOT to use self-contained as it's too big
+        run: dotnet publish -c Release --self-contained false -o publish
+
+      - name: Prepare Assets
+        shell: bash
+        run: |
+          mkdir dist
+          
+          # Go
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp golang/hypercopy_go_windows.exe dist/
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            cp golang/hypercopy_go_macos dist/
+          else
+            cp golang/hypercopy_go_linux dist/
+          fi
+          
+          # Rust
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp rust/target/release/rust.exe dist/hypercopy_rust_windows.exe
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            cp rust/target/release/rust dist/hypercopy_rust_macos
+          else
+            cp rust/target/release/rust dist/hypercopy_rust_linux
+          fi
+          
+          # C# (Zip the framework-dependent publish directory)
+          cd csharp/HyperCopy/publish
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            7z a ../../../dist/hypercopy_csharp_windows.zip *
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            zip -r ../../../dist/hypercopy_csharp_macos.zip *
+          else
+            zip -r ../../../dist/hypercopy_csharp_linux.zip *
+          fi
+          cd ../../../
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.os }}
+          path: dist/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: binaries-*
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
