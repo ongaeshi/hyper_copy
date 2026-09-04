@@ -83,3 +83,15 @@ When the replacement target (the string specified with `--to`) is `AaaBbb`, the 
 | `foobar` | `aaabbb` | all lowercase |
 
 *Note: For characters that do not have upper/lower cases (such as Japanese characters, e.g., `フー` -> `バー`), they are replaced exactly as specified.*
+
+## Benchmark
+
+Performance comparison of different language implementations (copying and replacing text in 10 large files). You can run `ruby benchmark.rb` to reproduce this test.
+
+| Language | Execution Time (s) | Binary Size |
+| --- | --- | --- |
+| Rust | 1.669 s | 1.80 MB |
+| Go | 2.321 s | 3.00 MB |
+| C# (Standard) | 2.590 s | 144.00 KB |
+| Ruby | 3.353 s | N/A (Script) |
+| C# (Self-Contained) | 4.679 s | 67.65 MB |

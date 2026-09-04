@@ -33,3 +33,7 @@ Cargo.lock
 /_yardoc/
 /doc/
 /rdoc/
+
+# Benchmark
+benchmark_bin/
+benchmark_data/
