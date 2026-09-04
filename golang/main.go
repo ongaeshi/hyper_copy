@@ -9,34 +9,42 @@ import (
 	"strings"
 )
 
-func rubyCapitalize(s string) string {
-	if s == "" {
-		return ""
-	}
-	runes := []rune(s)
-	first := strings.ToUpper(string(runes[0]))
-	var rest []string
-	for i := 1; i < len(runes); i++ {
-		rest = append(rest, strings.ToLower(string(runes[i])))
-	}
-	return first + strings.Join(rest, "")
-}
-
 func preserveCase(match, toStr string) string {
 	if toStr == "" {
 		return ""
 	}
 
+	if strings.Contains(match, "-") && strings.Contains(toStr, "-") {
+		mParts := strings.Split(match, "-")
+		tParts := strings.Split(toStr, "-")
+		if len(mParts) == len(tParts) {
+			var res []string
+			for i := 0; i < len(mParts); i++ {
+				res = append(res, preserveCase(mParts[i], tParts[i]))
+			}
+			return strings.Join(res, "-")
+		}
+	}
+
+	if strings.Contains(match, "_") && strings.Contains(toStr, "_") {
+		mParts := strings.Split(match, "_")
+		tParts := strings.Split(toStr, "_")
+		if len(mParts) == len(tParts) {
+			var res []string
+			for i := 0; i < len(mParts); i++ {
+				res = append(res, preserveCase(mParts[i], tParts[i]))
+			}
+			return strings.Join(res, "_")
+		}
+	}
+
 	matchUpper := strings.ToUpper(match)
 	matchLower := strings.ToLower(match)
-	matchCap := rubyCapitalize(match)
 
 	if match == matchUpper {
 		return strings.ToUpper(toStr)
 	} else if match == matchLower {
 		return strings.ToLower(toStr)
-	} else if match == matchCap {
-		return rubyCapitalize(toStr)
 	} else {
 		matchRunes := []rune(match)
 		toRunes := []rune(toStr)

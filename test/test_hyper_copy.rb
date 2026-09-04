@@ -37,10 +37,10 @@ module HyperCopyTestModule
   end
 
   def test_multiple_replace
-    File.write("TestMultiple.txt", "FooBar and フー and barBar")
-    run_cmd("--from", "FooBar", "--to", "AaaBbb", "--from2", "フー", "--to2", "バー", "--from3", "barBar", "--to3", "cccDdd", "TestMultiple.txt", "Out.txt")
+    File.write("TestMultiple.txt", "FooBar and フー and barBar and Foo and foo and foobar and foo-bar and FOO_BAR")
+    run_cmd("--from", "FooBar", "--to", "AaaBbb", "--from2", "フー", "--to2", "バー", "--from3", "barBar", "--to3", "cccDdd", "--from4", "Foo", "--to4", "BarBaz", "--from5", "foo-bar", "--to5", "baz-qux", "--from6", "foo_bar", "--to6", "baz_qux", "TestMultiple.txt", "Out.txt")
     content = File.read("Out.txt")
-    assert_equal "AaaBbb and バー and cccDdd", content
+    assert_equal "AaaBbb and バー and cccDdd and BarBaz and barbaz and aaabbb and baz-qux and BAZ_QUX", content
   end
 
   def test_directory_copy

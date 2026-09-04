@@ -6,12 +6,26 @@ require 'fileutils'
 def preserve_case(match, to_str)
   return "" if to_str.nil? || to_str.empty?
 
+  if match.include?('-') && to_str.include?('-')
+    m_parts = match.split('-', -1)
+    t_parts = to_str.split('-', -1)
+    if m_parts.length == t_parts.length
+      return m_parts.zip(t_parts).map { |m, t| preserve_case(m, t) }.join('-')
+    end
+  end
+
+  if match.include?('_') && to_str.include?('_')
+    m_parts = match.split('_', -1)
+    t_parts = to_str.split('_', -1)
+    if m_parts.length == t_parts.length
+      return m_parts.zip(t_parts).map { |m, t| preserve_case(m, t) }.join('_')
+    end
+  end
+
   if match == match.upcase
     to_str.upcase
   elsif match == match.downcase
     to_str.downcase
-  elsif match == match.capitalize
-    to_str.capitalize
   else
     if match[0] == match[0].downcase
       to_str[0].downcase + to_str[1..-1].to_s

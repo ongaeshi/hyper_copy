@@ -9,26 +9,35 @@ namespace HyperCopy
 {
     class Program
     {
-        static string RubyCapitalize(string s)
-        {
-            if (string.IsNullOrEmpty(s)) return s;
-            var chars = s.ToCharArray();
-            var first = char.ToUpper(chars[0]).ToString();
-            var rest = new string(chars.Skip(1).Select(char.ToLower).ToArray());
-            return first + rest;
-        }
-
         static string PreserveCase(string match, string toStr)
         {
             if (string.IsNullOrEmpty(toStr)) return "";
 
+            if (match.Contains("-") && toStr.Contains("-"))
+            {
+                var mParts = match.Split('-');
+                var tParts = toStr.Split('-');
+                if (mParts.Length == tParts.Length)
+                {
+                    return string.Join("-", mParts.Zip(tParts, (m, t) => PreserveCase(m, t)));
+                }
+            }
+
+            if (match.Contains("_") && toStr.Contains("_"))
+            {
+                var mParts = match.Split('_');
+                var tParts = toStr.Split('_');
+                if (mParts.Length == tParts.Length)
+                {
+                    return string.Join("_", mParts.Zip(tParts, (m, t) => PreserveCase(m, t)));
+                }
+            }
+
             var matchUpper = match.ToUpper();
             var matchLower = match.ToLower();
-            var matchCap = RubyCapitalize(match);
 
             if (match == matchUpper) return toStr.ToUpper();
             if (match == matchLower) return toStr.ToLower();
-            if (match == matchCap) return RubyCapitalize(toStr);
 
             var firstMatch = match[0];
             var firstTo = toStr[0];

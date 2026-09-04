@@ -4,31 +4,42 @@ use std::fs;
 use std::path::Path;
 use std::process;
 
-fn ruby_capitalize(s: &str) -> String {
-    if s.is_empty() {
-        return String::new();
-    }
-    let mut chars = s.chars();
-    let first = chars.next().unwrap().to_uppercase().to_string();
-    let rest: String = chars.map(|c| c.to_lowercase().to_string()).collect();
-    format!("{}{}", first, rest)
-}
-
 fn preserve_case(match_str: &str, to_str: &str) -> String {
     if to_str.is_empty() {
         return String::new();
     }
 
+    if match_str.contains('-') && to_str.contains('-') {
+        let m_parts: Vec<&str> = match_str.split('-').collect();
+        let t_parts: Vec<&str> = to_str.split('-').collect();
+        if m_parts.len() == t_parts.len() {
+            let mut res = Vec::new();
+            for (m, t) in m_parts.iter().zip(t_parts.iter()) {
+                res.push(preserve_case(m, t));
+            }
+            return res.join("-");
+        }
+    }
+
+    if match_str.contains('_') && to_str.contains('_') {
+        let m_parts: Vec<&str> = match_str.split('_').collect();
+        let t_parts: Vec<&str> = to_str.split('_').collect();
+        if m_parts.len() == t_parts.len() {
+            let mut res = Vec::new();
+            for (m, t) in m_parts.iter().zip(t_parts.iter()) {
+                res.push(preserve_case(m, t));
+            }
+            return res.join("_");
+        }
+    }
+
     let match_upper = match_str.to_uppercase();
     let match_lower = match_str.to_lowercase();
-    let match_cap = ruby_capitalize(match_str);
 
     if match_str == match_upper {
         return to_str.to_uppercase();
     } else if match_str == match_lower {
         return to_str.to_lowercase();
-    } else if match_str == match_cap {
-        return ruby_capitalize(to_str);
     } else {
         let mut match_chars = match_str.chars();
         let mut to_chars = to_str.chars();
