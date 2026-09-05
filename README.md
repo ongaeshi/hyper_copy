@@ -97,3 +97,10 @@ Performance comparison of different language implementations (copying and replac
 | C# (Standard) | 2.590 s | 144.00 KB |
 | Ruby | 3.353 s | N/A (Script) |
 | C# (Self-Contained) | 4.679 s | 67.65 MB |
+
+### Technical Documentation
+
+For details on the implementation methods and language characteristics used in this project, please see the following documents (Japanese only):
+
+- [Language Comparison and Recommended Environment (language_comparison.md)](doc/language_comparison.md)
+- [Multi-Language Development and Testing Methodology (multi_language_testing.md)](doc/multi_language_testing.md)

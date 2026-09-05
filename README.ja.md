@@ -95,3 +95,12 @@ Bar.cs -> Bar.cs (overwrite)
 | C# (Standard) | 2.590 s | 144.00 KB |
 | Ruby | 3.353 s | N/A (Script) |
 | C# (Self-Contained) | 4.679 s | 67.65 MB |
+
+### 開発・技術ドキュメント
+
+本プロジェクトで用いられている実装手法や各言語の特徴について、以下のドキュメントにまとめています。
+
+- [各言語の実装比較と推奨環境 (language_comparison.md)](doc/language_comparison.md)
+  - どの言語のバージョンを使うべきか迷った際はこちらをご覧ください。
+- [マルチ言語実装の開発・テスト手法 (multi_language_testing.md)](doc/multi_language_testing.md)
+  - 1つのテストスクリプトで全言語の挙動を保証するテスト手法について解説しています。
