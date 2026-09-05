@@ -84,7 +84,7 @@ When the replacement target (the string specified with `--to`) is `AaaBbb`, the 
 
 *Note: For characters that do not have upper/lower cases (such as Japanese characters, e.g., `フー` -> `バー`), they are replaced exactly as specified.*
 
-For more detailed conversion rules and compatibility with Visual Studio Code's behavior, please refer to [doc/preserve_case.md](doc/preserve_case.md) (Japanese only).
+For more detailed conversion rules and compatibility with Visual Studio Code's behavior, please refer to [document/preserve_case.md](document/preserve_case.md) (Japanese only).
 
 ## Benchmark
 
@@ -102,5 +102,5 @@ Performance comparison of different language implementations (copying and replac
 
 For details on the implementation methods and language characteristics used in this project, please see the following documents (Japanese only):
 
-- [Language Comparison and Recommended Environment (language_comparison.md)](doc/language_comparison.md)
-- [Multi-Language Development and Testing Methodology (multi_language_testing.md)](doc/multi_language_testing.md)
+- [Language Comparison and Recommended Environment (language_comparison.md)](document/language_comparison.md)
+- [Multi-Language Development and Testing Methodology (multi_language_testing.md)](document/multi_language_testing.md)

@@ -82,7 +82,7 @@ Bar.cs -> Bar.cs (overwrite)
 
 ※ 日本語（例: `フー` -> `バー`）などの文字の大小が存在しない文字については、そのまま置換されます。
 
-より詳細な変換ルールや、Visual Studio Code の挙動との互換性についての解説は [doc/preserve_case.md](doc/preserve_case.md) をご参照ください。
+より詳細な変換ルールや、Visual Studio Code の挙動との互換性についての解説は [document/preserve_case.md](document/preserve_case.md) をご参照ください。
 
 ## ベンチマーク
 
@@ -100,7 +100,7 @@ Bar.cs -> Bar.cs (overwrite)
 
 本プロジェクトで用いられている実装手法や各言語の特徴について、以下のドキュメントにまとめています。
 
-- [各言語の実装比較と推奨環境 (language_comparison.md)](doc/language_comparison.md)
+- [各言語の実装比較と推奨環境 (language_comparison.md)](document/language_comparison.md)
   - どの言語のバージョンを使うべきか迷った際はこちらをご覧ください。
-- [マルチ言語実装の開発・テスト手法 (multi_language_testing.md)](doc/multi_language_testing.md)
+- [マルチ言語実装の開発・テスト手法 (multi_language_testing.md)](document/multi_language_testing.md)
   - 1つのテストスクリプトで全言語の挙動を保証するテスト手法について解説しています。
