@@ -84,6 +84,8 @@ When the replacement target (the string specified with `--to`) is `AaaBbb`, the 
 
 *Note: For characters that do not have upper/lower cases (such as Japanese characters, e.g., `フー` -> `バー`), they are replaced exactly as specified.*
 
+For more detailed conversion rules and compatibility with Visual Studio Code's behavior, please refer to [doc/preserve_case.md](doc/preserve_case.md) (Japanese only).
+
 ## Benchmark
 
 Performance comparison of different language implementations (copying and replacing text in 10 large files). You can run `ruby test/benchmark.rb` to reproduce this test.
