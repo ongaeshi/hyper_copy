@@ -108,15 +108,11 @@ end
 if use_clipboard
   # Clipboard mode
   begin
-    content = `powershell.exe -NoProfile -Command "Get-Clipboard -Raw"`.force_encoding('UTF-8')
+    require_relative 'clipboard'
+    content = Clipboard.paste
     new_content = apply_replacements(content, replacements)
     
-    require 'tempfile'
-    Tempfile.create('hyper_copy_clip') do |f|
-      f.write(new_content)
-      f.flush
-      system("powershell.exe -NoProfile -Command \"Get-Content -LiteralPath '#{f.path}' -Raw | Set-Clipboard\"")
-    end
+    Clipboard.copy(new_content)
     
     puts "clipboard -> clipboard"
   rescue => e
