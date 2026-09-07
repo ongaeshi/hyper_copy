@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode/utf8"
 )
 
 func preserveCase(match, toStr string) string {
@@ -68,34 +69,125 @@ type Replacement struct {
 	To   string
 }
 
-func applyReplacements(text string, replacements []Replacement) string {
-	if len(replacements) == 0 {
-		return text
+// Replacer compiles rules once and reuses case conversions across files.
+// It is used sequentially by the copy loop.
+type Replacer struct {
+	pairs   []Replacement
+	re      *regexp.Regexp
+	literal string
+	cache   map[string]string
+}
+
+func newReplacer(replacements []Replacement) *Replacer {
+	r := &Replacer{pairs: append([]Replacement(nil), replacements...), cache: make(map[string]string)}
+	if len(r.pairs) == 0 {
+		return r
 	}
-
-	sortedPairs := make([]Replacement, len(replacements))
-	copy(sortedPairs, replacements)
-	sort.SliceStable(sortedPairs, func(i, j int) bool {
-		return len(sortedPairs[i].From) > len(sortedPairs[j].From)
-	})
-
-	var patternParts []string
-	for _, p := range sortedPairs {
-		patternParts = append(patternParts, regexp.QuoteMeta(p.From))
-	}
-	pattern := "(?i)(" + strings.Join(patternParts, "|") + ")"
-	re := regexp.MustCompile(pattern)
-
-	return re.ReplaceAllStringFunc(text, func(match string) string {
-		var toStr string
-		for _, p := range sortedPairs {
-			if strings.EqualFold(match, p.From) {
-				toStr = p.To
+	sort.SliceStable(r.pairs, func(i, j int) bool { return len(r.pairs[i].From) > len(r.pairs[j].From) })
+	// Short ASCII literals need no regular-expression engine. Bound their
+	// length so repeated partial matches cannot cause unbounded rescanning.
+	if len(r.pairs) == 1 && len(r.pairs[0].From) > 0 && len(r.pairs[0].From) <= 64 {
+		ascii := true
+		for _, c := range r.pairs[0].From {
+			if c >= utf8.RuneSelf {
+				ascii = false
 				break
 			}
 		}
-		return preserveCase(match, toStr)
-	})
+		if ascii {
+			r.literal = strings.ToLower(r.pairs[0].From)
+			return r
+		}
+	}
+	parts := make([]string, len(r.pairs))
+	for i, p := range r.pairs {
+		parts[i] = regexp.QuoteMeta(p.From)
+	}
+	r.re = regexp.MustCompile("(?i)(" + strings.Join(parts, "|") + ")")
+	return r
+}
+
+func (r *Replacer) replacement(match string) string {
+	if to, ok := r.cache[match]; ok {
+		return to
+	}
+	var to string
+	for _, p := range r.pairs {
+		if strings.EqualFold(match, p.From) {
+			to = preserveCase(match, p.To)
+			break
+		}
+	}
+	// Bound retained input and case variants, including for long user rules.
+	if len(r.cache) < 256 && len(match) <= 256 {
+		r.cache[strings.Clone(match)] = to
+	}
+	return to
+}
+
+// foldASCII also accepts the two non-ASCII runes in ASCII Unicode simple-fold
+// classes, so literals containing K or S keep regexp's Unicode semantics.
+func foldASCII(text string, pos int) (byte, int) {
+	c := text[pos]
+	if c < utf8.RuneSelf {
+		if c >= 'A' && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		return c, 1
+	}
+	ch, size := utf8.DecodeRuneInString(text[pos:])
+	switch ch {
+	case 'K':
+		return 'k', size
+	case 'ſ':
+		return 's', size
+	}
+	return 0xff, size
+}
+
+func (r *Replacer) apply(text string) string {
+	if len(r.pairs) == 0 {
+		return text
+	}
+	if r.literal == "" {
+		return r.re.ReplaceAllStringFunc(text, r.replacement)
+	}
+	var out strings.Builder
+	last := 0
+	for pos := 0; pos < len(text); {
+		c, size := foldASCII(text, pos)
+		if c != r.literal[0] {
+			pos += size
+			continue
+		}
+		end := pos + size
+		i := 1
+		for i < len(r.literal) && end < len(text) {
+			c, size = foldASCII(text, end)
+			if c != r.literal[i] {
+				break
+			}
+			end += size
+			i++
+		}
+		if i != len(r.literal) {
+			_, size = foldASCII(text, pos)
+			pos += size
+			continue
+		}
+		if out.Cap() == 0 {
+			out.Grow(len(text))
+		}
+		out.WriteString(text[last:pos])
+		out.WriteString(r.replacement(text[pos:end]))
+		pos = end
+		last = end
+	}
+	if last == 0 {
+		return text
+	}
+	out.WriteString(text[last:])
+	return out.String()
 }
 
 type ArgSuffixPair struct {
@@ -169,6 +261,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	replacer := newReplacer(replacements)
+
 	sources := args[:len(args)-1]
 	dest := args[len(args)-1]
 
@@ -178,7 +272,7 @@ func main() {
 	if err == nil && destInfo.IsDir() {
 		for _, src := range sources {
 			baseName := filepath.Base(src)
-			newBaseName := applyReplacements(baseName, replacements)
+			newBaseName := replacer.apply(baseName)
 			tasks = append(tasks, Task{Src: src, Dest: filepath.Join(dest, newBaseName)})
 		}
 	} else {
@@ -215,7 +309,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		newContent := applyReplacements(string(content), replacements)
+		newContent := replacer.apply(string(content))
 
 		_, err = os.Stat(task.Dest)
 		overwritten := err == nil
