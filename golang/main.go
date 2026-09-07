@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/atotto/clipboard"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -110,6 +111,7 @@ type Task struct {
 
 func main() {
 	force := false
+	useClipboard := false
 	var args []string
 	var fromList []ArgSuffixPair
 	var toList []ArgSuffixPair
@@ -121,6 +123,8 @@ func main() {
 		arg := os.Args[i]
 		if arg == "-f" || arg == "--force" {
 			force = true
+		} else if arg == "-c" || arg == "--clipboard" {
+			useClipboard = true
 		} else if m := fromRe.FindStringSubmatch(arg); m != nil {
 			if i+1 < len(os.Args) {
 				fromList = append(fromList, ArgSuffixPair{Suffix: m[1], Val: os.Args[i+1]})
@@ -142,7 +146,16 @@ func main() {
 		}
 	}
 
-	if len(args) < 2 {
+	if useClipboard {
+		if len(args) > 0 {
+			fmt.Fprintln(os.Stderr, "Error: Do not specify files when using -c or --clipboard.")
+			os.Exit(1)
+		}
+		if len(fromList) == 0 {
+			fmt.Fprintln(os.Stderr, "Error: Missing --from for clipboard replacement.")
+			os.Exit(1)
+		}
+	} else if len(args) < 2 {
 		fmt.Fprintln(os.Stderr, "Usage: hyper_copy [options] <source...> <dest>")
 		os.Exit(1)
 	}
@@ -167,6 +180,22 @@ func main() {
 	if len(toList) > 0 {
 		fmt.Fprintf(os.Stderr, "Error: Missing --from%s for --to%s %s\n", toList[0].Suffix, toList[0].Suffix, toList[0].Val)
 		os.Exit(1)
+	}
+
+	if useClipboard {
+		content, err := clipboard.ReadAll()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Clipboard Error: %v\n", err)
+			os.Exit(1)
+		}
+		newContent := applyReplacements(content, replacements)
+		err = clipboard.WriteAll(newContent)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Clipboard Error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("clipboard -> clipboard")
+		os.Exit(0)
 	}
 
 	sources := args[:len(args)-1]

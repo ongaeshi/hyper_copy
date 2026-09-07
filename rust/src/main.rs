@@ -97,6 +97,8 @@ fn main() {
     let mut from_list: Vec<ArgSuffixPair> = Vec::new();
     let mut to_list: Vec<ArgSuffixPair> = Vec::new();
 
+    let mut use_clipboard = false;
+
     let from_re = Regex::new(r"^--from(\d*)$").unwrap();
     let to_re = Regex::new(r"^--to(\d*)$").unwrap();
 
@@ -106,6 +108,9 @@ fn main() {
         let arg = &args[i];
         if arg == "-f" || arg == "--force" {
             force = true;
+            i += 1;
+        } else if arg == "-c" || arg == "--clipboard" {
+            use_clipboard = true;
             i += 1;
         } else if let Some(caps) = from_re.captures(arg) {
             let suffix = caps.get(1).unwrap().as_str().to_string();
@@ -137,7 +142,16 @@ fn main() {
         }
     }
 
-    if args_list.len() < 2 {
+    if use_clipboard {
+        if !args_list.is_empty() {
+            eprintln!("Error: Do not specify files when using -c or --clipboard.");
+            process::exit(1);
+        }
+        if from_list.is_empty() {
+            eprintln!("Error: Missing --from for clipboard replacement.");
+            process::exit(1);
+        }
+    } else if args_list.len() < 2 {
         eprintln!("Usage: hyper_copy [options] <source...> <dest>");
         process::exit(1);
     }
@@ -162,6 +176,34 @@ fn main() {
             to_list[0].suffix, to_list[0].suffix, to_list[0].val
         );
         process::exit(1);
+    }
+
+    if use_clipboard {
+        let mut clipboard = match arboard::Clipboard::new() {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("Clipboard Error: {}", e);
+                process::exit(1);
+            }
+        };
+
+        let content = match clipboard.get_text() {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("Clipboard Error: {}", e);
+                process::exit(1);
+            }
+        };
+
+        let new_content = apply_replacements(&content, &replacements);
+
+        if let Err(e) = clipboard.set_text(new_content) {
+            eprintln!("Clipboard Error: {}", e);
+            process::exit(1);
+        }
+
+        println!("clipboard -> clipboard");
+        process::exit(0);
     }
 
     let dest = args_list.pop().unwrap();

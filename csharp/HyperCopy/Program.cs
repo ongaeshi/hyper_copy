@@ -70,9 +70,10 @@ namespace HyperCopy
             });
         }
 
-        static void Main(string[] args)
+        static async System.Threading.Tasks.Task Main(string[] args)
         {
             bool force = false;
+            bool useClipboard = false;
             var argsList = new List<string>();
             var fromList = new List<(string Suffix, string Val)>();
             var toList = new List<(string Suffix, string Val)>();
@@ -86,6 +87,10 @@ namespace HyperCopy
                 if (arg == "-f" || arg == "--force")
                 {
                     force = true;
+                }
+                else if (arg == "-c" || arg == "--clipboard")
+                {
+                    useClipboard = true;
                 }
                 else if (fromRegex.IsMatch(arg))
                 {
@@ -121,7 +126,20 @@ namespace HyperCopy
                 }
             }
 
-            if (argsList.Count < 2)
+            if (useClipboard)
+            {
+                if (argsList.Count > 0)
+                {
+                    Console.Error.WriteLine("Error: Do not specify files when using -c or --clipboard.");
+                    Environment.Exit(1);
+                }
+                if (fromList.Count == 0)
+                {
+                    Console.Error.WriteLine("Error: Missing --from for clipboard replacement.");
+                    Environment.Exit(1);
+                }
+            }
+            else if (argsList.Count < 2)
             {
                 Console.Error.WriteLine("Usage: hyper_copy [options] <source...> <dest>");
                 Environment.Exit(1);
@@ -147,6 +165,24 @@ namespace HyperCopy
             {
                 Console.Error.WriteLine($"Error: Missing --from{toList[0].Suffix} for --to{toList[0].Suffix} {toList[0].Val}");
                 Environment.Exit(1);
+            }
+
+            if (useClipboard)
+            {
+                try
+                {
+                    var content = await TextCopy.ClipboardService.GetTextAsync();
+                    if (content == null) content = "";
+                    var newContent = ApplyReplacements(content, replacements);
+                    await TextCopy.ClipboardService.SetTextAsync(newContent);
+                    Console.WriteLine("clipboard -> clipboard");
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine($"Clipboard Error: {e.Message}");
+                    Environment.Exit(1);
+                }
+                Environment.Exit(0);
             }
 
             var sources = argsList.Take(argsList.Count - 1).ToList();
