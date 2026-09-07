@@ -48,6 +48,7 @@ def apply_replacements(text, replacements)
 end
 
 force = false
+use_clipboard = false
 args = []
 from_list = []
 to_list = []
@@ -57,6 +58,9 @@ while i < ARGV.length
   arg = ARGV[i]
   if arg == '-f' || arg == '--force'
     force = true
+    i += 1
+  elsif arg == '-c' || arg == '--clipboard'
+    use_clipboard = true
     i += 1
   elsif arg =~ /^--from(\d*)$/
     from_list << { suffix: $1, val: ARGV[i + 1] }
@@ -70,7 +74,16 @@ while i < ARGV.length
   end
 end
 
-if args.length < 2
+if use_clipboard
+  if args.length > 0
+    warn "Error: Do not specify files when using -c or --clipboard."
+    exit 1
+  end
+  if from_list.empty?
+    warn "Error: Missing --from for clipboard replacement."
+    exit 1
+  end
+elsif args.length < 2
   warn "Usage: hyper_copy [options] <source...> <dest>"
   exit 1
 end
@@ -90,6 +103,27 @@ end
 unless to_list.empty?
   warn "Error: Missing --from#{to_list.first[:suffix]} for --to#{to_list.first[:suffix]} #{to_list.first[:val]}"
   exit 1
+end
+
+if use_clipboard
+  # Clipboard mode
+  begin
+    content = `powershell.exe -NoProfile -Command "Get-Clipboard -Raw"`.force_encoding('UTF-8')
+    new_content = apply_replacements(content, replacements)
+    
+    require 'tempfile'
+    Tempfile.create('hyper_copy_clip') do |f|
+      f.write(new_content)
+      f.flush
+      system("powershell.exe -NoProfile -Command \"Get-Content -LiteralPath '#{f.path}' -Raw | Set-Clipboard\"")
+    end
+    
+    puts "clipboard -> clipboard"
+  rescue => e
+    warn "Clipboard Error: #{e.message}"
+    exit 1
+  end
+  exit 0
 end
 
 sources = args[0...-1]
@@ -145,3 +179,4 @@ tasks.each do |task|
     puts "#{src} -> #{target}"
   end
 end
+
