@@ -108,11 +108,11 @@ end
 if use_clipboard
   # Clipboard mode
   begin
-    require_relative 'clipboard'
-    content = Clipboard.paste
+    require_relative 'tiny_clipboard'
+    content = TinyClipboard.paste
     new_content = apply_replacements(content, replacements)
     
-    Clipboard.copy(new_content)
+    TinyClipboard.copy(new_content)
     
     puts "clipboard -> clipboard"
   rescue => e
